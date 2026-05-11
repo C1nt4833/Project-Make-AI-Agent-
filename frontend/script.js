@@ -171,14 +171,21 @@ async function analyzeImage() {
     });
 
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+      let body = '';
+      try {
+        const json = await response.json();
+        body = json.error || JSON.stringify(json);
+      } catch {
+        body = await response.text();
+      }
+      throw new Error(`Server returned ${response.status}${body ? `: ${body}` : ''}`);
     }
 
     const data = await response.json();
     updateResultPanel(data);
   } catch (error) {
     console.error('Error fetching analysis:', error);
-    window.alert('Terjadi kesalahan saat menghubungkan ke backend. Pastikan server Flask sudah berjalan.');
+    window.alert(`Terjadi kesalahan saat menghubungkan ke backend. ${error.message}`);
   } finally {
     setLoading(false);
   }
