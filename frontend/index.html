@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Panen | AgriMind AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-container">
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="w-8 h-8 bg-[#C8E664] rounded-full flex items-center justify-center text-[#0B2E26] font-bold">V</div>
+            <span>Panen Pintar</span>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-target="dasbor">
+                <span class="mr-3 text-xl">📊</span> Dasbor
+            </a>
+            <a href="#" class="nav-item" data-target="analitik">
+                <span class="mr-3 text-xl">📈</span> Analitik
+            </a>
+            <a href="#" class="nav-item" data-target="panen">
+                <span class="mr-3 text-xl">🌾</span> Panen
+            </a>
+            <a href="#" class="nav-item" data-target="jadwal">
+                <span class="mr-3 text-xl">📅</span> Jadwal
+            </a>
+        </nav>
+        <div class="mt-auto pt-10">
+            <button class="nav-item w-full opacity-60 hover:opacity-100 text-left">
+                <span class="mr-3 text-xl">🚪</span> Keluar
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="p-6 flex justify-between items-center bg-white shadow-sm z-10 sticky top-0">
+            <div class="relative w-full max-w-md">
+                <input type="text" id="locationInput" value="Brebes, Jawa Tengah"
+                    class="w-full bg-slate-100 rounded-full px-6 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#C8E664] transition"
+                    placeholder="Cari lokasi...">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-[#0B2E26]">Petani Sukses</p>
+                    <p class="text-xs text-gray-500">Kelompok Tani Makmur</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#C8E664]">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="User" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <!-- SECTION: DASBOR -->
+            <section id="dasbor" class="page-section active">
+                <!-- Recent Alert -->
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-2xl mb-8 flex items-start shadow-sm">
+                    <span class="text-red-500 text-2xl mr-4">⚠️</span>
+                    <div>
+                        <h4 class="text-red-800 font-bold">Peringatan Cuaca Ekstrem</h4>
+                        <p class="text-red-600 text-sm mt-1">Hujan lebat diprediksi mulai sore ini. Waspadai peningkatan kelembapan yang dapat memicu jamur Alternaria porri (Bercak Ungu).</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Cuaca & Risk Badge -->
+                    <div class="card relative overflow-hidden bg-white">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[#C8E664] rounded-bl-full opacity-10"></div>
+                        <h3 class="card-title">Kondisi Cuaca Area</h3>
+                        <div class="flex justify-between items-end mt-4">
+                            <div>
+                                <p class="text-5xl font-bold mt-2 text-[#0B2E26] tracking-tighter" id="tempDisplay">29°<span class="text-2xl text-gray-400">C</span></p>
+                                <p class="text-gray-500 text-sm mt-2 font-semibold">☁️ Mendung & Kelembapan 86%</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center shadow-sm">
+                                    <span class="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span> Risiko Sedang
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Scan Widget -->
+                    <div class="card p-0 overflow-hidden relative border-2 border-dashed border-slate-300 group cursor-pointer bg-slate-50" onclick="openCaptureModal()">
+                        <img id="previewImage"
+                            src="https://images.unsplash.com/photo-1599814420845-a454d4ff656a?auto=format&fit=crop&q=80&w=400"
+                            class="object-cover w-full h-full opacity-90 group-hover:scale-110 group-hover:opacity-100 transition duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B2E26]/90 via-black/20 to-transparent flex flex-col justify-end p-5">
+                            <span class="text-white font-bold text-xl mb-1 flex items-center"><span class="text-2xl mr-2">📷</span> AI Scan Daun</span>
+                            <span class="text-[#C8E664] text-xs font-semibold uppercase tracking-wider">Klik untuk deteksi penyakit</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Health Diagnosis (Health Score) -->
+                    <div class="card">
+                        <h3 class="card-title">Skor Kesehatan Lahan</h3>
+                        <div class="flex items-center gap-5 mt-4">
+                            <div class="relative w-24 h-24 flex-shrink-0 drop-shadow-md">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-slate-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path id="healthCircle" class="text-slate-200 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="healthScoreCircle" class="text-2xl font-bold text-slate-400">--</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg text-[#0B2E26]" id="diagnosisLabel">Belum Ada Analisis</p>
+                                <div id="loading" class="hidden text-xs text-orange-500 animate-pulse mt-1 font-bold">Menggunakan AI...</div>
+                                <ul id="actionPlan" class="mt-2 text-xs space-y-1 text-slate-600 list-disc pl-4 font-medium">
+                                    <li>Upload foto untuk hasil.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-center">
+                    <button id="analyzeBtn" class="w-full md:w-2/3 lg:w-1/2 btn-analyze flex justify-center items-center gap-3 text-lg shadow-xl shadow-[#C8E664]/20">
+                        <span class="text-2xl">✨</span> Analisis Foto Sekarang
+                    </button>
+                </div>
+            </section>
+
+            <!-- SECTION: ANALITIK -->
+            <section id="analitik" class="page-section hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <!-- Historical Health -->
+                    <div class="card shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="card-title !mb-0">Tren Kesehatan (30 Hari)</h3>
+                            <span class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold">+5% Membaik</span>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="historicalChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Production Comparison -->
+                    <div class="card shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="card-title !mb-0">Perbandingan Tonase</h3>
+                            <select class="bg-slate-50 border border-slate-200 text-xs px-2 py-1 rounded-lg outline-none font-bold text-slate-600">
+                                <option>Musim Ini vs Lalu</option>
+                            </select>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="productionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Inference -->
+                <div class="card bg-[#0B2E26] text-white overflow-hidden relative">
+                    <!-- Decorative background -->
+                    <div class="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+                    
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-[#C8E664] mb-6 relative z-10 flex items-center">
+                        <span class="mr-2">🌍</span> Estimasi Kondisi Lingkungan AI
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                        <div class="bg-white/10 p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition">
+                            <p class="text-sm text-slate-300 font-semibold mb-2">Estimasi pH Tanah</p>
+                            <div class="flex items-end gap-3">
+                                <p class="text-4xl font-bold text-white">6.2</p>
+                                <span class="bg-[#C8E664] text-[#0B2E26] px-2 py-1 rounded text-xs font-bold mb-1">Ideal</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition">
+                            <p class="text-sm text-slate-300 font-semibold mb-2">Kelembapan Tanah</p>
+                            <div class="flex items-end gap-3">
+                                <p class="text-4xl font-bold text-white">68%</p>
+                                <span class="bg-blue-400 text-blue-900 px-2 py-1 rounded text-xs font-bold mb-1">Optimal</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col justify-center">
+                            <p class="text-sm text-slate-300 italic border-l-4 border-[#C8E664] pl-4 leading-relaxed">
+                                "Parameter dikalkulasi menggunakan data satelit cuaca, citra daun, dan evapotranspirasi regional tanpa perlu sensor fisik di lahan."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: PANEN -->
+            <section id="panen" class="page-section hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Yield Estimation -->
+                    <div class="card col-span-2 bg-gradient-to-r from-[#C8E664] to-[#e4ff8c] border-none shadow-lg relative overflow-hidden flex flex-col justify-center">
+                        <div class="absolute right-0 bottom-0 text-[10rem] opacity-20 transform translate-y-8 translate-x-4">🚜</div>
+                        <h3 class="text-[#0B2E26] font-bold uppercase tracking-widest text-xs opacity-70 mb-2 relative z-10">Proyeksi Total Panen</h3>
+                        <div class="flex items-baseline gap-2 relative z-10">
+                            <p class="text-7xl font-bold text-[#0B2E26] tracking-tighter">12.5</p>
+                            <p class="text-2xl font-bold text-[#0B2E26]">Ton</p>
+                        </div>
+                        <p class="text-[#0B2E26] text-sm mt-3 font-semibold relative z-10 flex items-center gap-2">
+                            <span class="bg-[#0B2E26] text-[#C8E664] px-2 py-0.5 rounded text-xs">Total 2 Hektar</span>
+                            Estimasi akurasi 92%
+                        </p>
+                    </div>
+
+                    <!-- Market Price -->
+                    <div class="card flex flex-col justify-center text-center relative shadow-sm border-2 border-green-50">
+                        <h3 class="card-title">Harga Bawang Merah</h3>
+                        <p class="text-sm text-slate-500 font-semibold mb-1">Pasar Induk Brebes</p>
+                        <p class="text-4xl font-bold text-[#0B2E26] mt-2 tracking-tight">Rp 28<span class="text-2xl">.500</span></p>
+                        <p class="text-xs text-slate-400 font-bold mt-1">/ Kg</p>
+                        <div class="mt-4">
+                            <span class="inline-block bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold">
+                                ↗ Naik Rp 500 (H-1)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Tracking -->
+                <div class="card shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="card-title !mb-0 text-base">Manajemen Blok Lahan</h3>
+                        <button class="text-[#0B2E26] text-xs font-bold bg-[#C8E664]/20 px-4 py-2 rounded-lg hover:bg-[#C8E664] transition flex items-center gap-2">
+                            <span>➕</span> Tambah Lahan
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-xs uppercase tracking-wider border-b-2 border-slate-100">
+                                    <th class="pb-4 px-4 font-bold">Nama Blok</th>
+                                    <th class="pb-4 px-4 font-bold">Varietas</th>
+                                    <th class="pb-4 px-4 font-bold">Luas Area</th>
+                                    <th class="pb-4 px-4 font-bold">Est. Hasil</th>
+                                    <th class="pb-4 px-4 font-bold">Status Pertumbuhan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-semibold">
+                                <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                                    <td class="py-5 px-4 text-[#0B2E26] flex items-center gap-3">
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div> Lahan A (Utara)
+                                    </td>
+                                    <td class="py-5 px-4 text-slate-600">Bima Brebes</td>
+                                    <td class="py-5 px-4 text-slate-600">1.0 Ha</td>
+                                    <td class="py-5 px-4 text-[#0B2E26]">6.5 Ton</td>
+                                    <td class="py-5 px-4"><span class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs">Fase Vegetatif</span></td>
+                                </tr>
+                                <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                                    <td class="py-5 px-4 text-[#0B2E26] flex items-center gap-3">
+                                        <div class="w-3 h-3 rounded-full bg-blue-500"></div> Lahan B (Timur)
+                                    </td>
+                                    <td class="py-5 px-4 text-slate-600">Bauji</td>
+                                    <td class="py-5 px-4 text-slate-600">0.5 Ha</td>
+                                    <td class="py-5 px-4 text-[#0B2E26]">3.0 Ton</td>
+                                    <td class="py-5 px-4"><span class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs">Pembentukan Umbi</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="py-5 px-4 text-[#0B2E26] flex items-center gap-3">
+                                        <div class="w-3 h-3 rounded-full bg-orange-500"></div> Lahan C (Barat)
+                                    </td>
+                                    <td class="py-5 px-4 text-slate-600">Bima Brebes</td>
+                                    <td class="py-5 px-4 text-slate-600">0.5 Ha</td>
+                                    <td class="py-5 px-4 text-[#0B2E26]">3.0 Ton</td>
+                                    <td class="py-5 px-4"><span class="bg-orange-100 text-orange-800 px-3 py-1.5 rounded-lg text-xs">Persiapan Panen</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: JADWAL -->
+            <section id="jadwal" class="page-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Planting Timeline & Countdown -->
+                    <div class="card relative overflow-hidden bg-gradient-to-br from-[#0B2E26] to-[#124237] text-white p-8">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[#C8E664] rounded-full blur-3xl opacity-20 -mr-10 -mt-10"></div>
+                        <h3 class="text-[#C8E664] font-bold uppercase tracking-widest text-xs mb-6">Siklus Lahan A (Utara)</h3>
+                        
+                        <div class="flex flex-col gap-6">
+                            <div>
+                                <p class="text-sm text-slate-300 font-semibold mb-1">Usia Tanaman</p>
+                                <div class="flex items-baseline gap-2">
+                                    <p class="text-5xl font-bold text-white tracking-tighter">45</p>
+                                    <p class="text-lg font-semibold text-slate-400">HST</p>
+                                </div>
+                            </div>
+
+                            <div class="w-full bg-white/10 rounded-full h-3 backdrop-blur-sm relative">
+                                <div class="bg-gradient-to-r from-[#C8E664] to-green-400 h-3 rounded-full shadow-[0_0_10px_rgba(200,230,100,0.5)]" style="width: 75%"></div>
+                                <!-- Markers -->
+                                <div class="absolute top-4 left-0 text-[10px] text-slate-400 font-bold">Tanam</div>
+                                <div class="absolute top-4 right-0 text-[10px] text-slate-400 font-bold">Panen (60)</div>
+                            </div>
+
+                            <div class="mt-2 bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Target Panen</p>
+                                    <p class="text-lg font-bold">25 Mei 2026</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-3xl font-bold text-[#C8E664]">15<span class="text-sm ml-1 text-slate-300">Hari</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-6">
+                        <!-- Irrigation Timer -->
+                        <div class="card flex items-center gap-6 p-6 border-l-4 border-blue-400 shadow-sm">
+                            <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-3xl shadow-inner">
+                                💧
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Jadwal Siram Berikutnya</h3>
+                                <p class="text-4xl font-bold text-[#0B2E26] tracking-tighter mb-1">16:00</p>
+                                <p class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">Penguapan tinggi siang ini</p>
+                            </div>
+                        </div>
+
+                        <!-- Weather Mini Card for Schedule Context -->
+                        <div class="card p-6 shadow-sm flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="text-4xl">🌦️</span>
+                                <div>
+                                    <h3 class="font-bold text-[#0B2E26]">Prediksi Besok</h3>
+                                    <p class="text-sm font-semibold text-slate-500">Hujan Ringan Pagi</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-[#0B2E26] bg-[#C8E664] px-3 py-1.5 rounded-lg">Tunda Pupuk Cair</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Generated Tasks -->
+                <div class="card shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="card-title !mb-0 text-base">Tugas Harian dari AI</h3>
+                        <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">Hari ini</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <!-- Task 1 (Urgent) -->
+                        <label class="flex items-start gap-4 p-5 rounded-2xl border border-red-100 bg-red-50/30 hover:bg-red-50/60 cursor-pointer transition group">
+                            <div class="relative flex items-center justify-center mt-1">
+                                <input type="checkbox" class="peer w-6 h-6 rounded-lg border-2 border-red-300 text-red-600 focus:ring-red-500 cursor-pointer appearance-none checked:bg-red-500 checked:border-red-500 transition-all">
+                                <svg class="absolute w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-[#0B2E26] text-lg group-hover:text-red-700 transition">Penyemprotan Fungisida Propineb</p>
+                                <p class="text-sm text-slate-600 mt-1 font-medium">Lakukan sebelum jam 15:00. Pemicu: Prediksi hujan lebat sore ini (Pencegahan Alternaria).</p>
+                            </div>
+                            <span class="shrink-0 bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold border border-red-200 shadow-sm">Kritis</span>
+                        </label>
+
+                        <!-- Task 2 (Routine) -->
+                        <label class="flex items-start gap-4 p-5 rounded-2xl border border-slate-100 hover:border-slate-300 hover:shadow-md cursor-pointer transition group">
+                            <div class="relative flex items-center justify-center mt-1">
+                                <input type="checkbox" class="peer w-6 h-6 rounded-lg border-2 border-slate-300 text-[#0B2E26] focus:ring-[#0B2E26] cursor-pointer appearance-none checked:bg-[#0B2E26] checked:border-[#0B2E26] transition-all">
+                                <svg class="absolute w-4 h-4 text-[#C8E664] opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-[#0B2E26] text-lg peer-checked:line-through peer-checked:text-slate-400 transition">Pemupukan NPK (Fase Pembesaran)</p>
+                                <p class="text-sm text-slate-500 mt-1 font-medium">Blok B (HST 35). Dosis: 100kg/Ha. Gunakan NPK 16-16-16.</p>
+                            </div>
+                            <span class="shrink-0 bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100">Rutin</span>
+                        </label>
+
+                        <!-- Task 3 (Completed) -->
+                        <label class="flex items-start gap-4 p-5 rounded-2xl border border-slate-100 bg-slate-50 opacity-60 cursor-pointer transition">
+                            <div class="relative flex items-center justify-center mt-1">
+                                <input type="checkbox" checked class="peer w-6 h-6 rounded-lg border-2 border-slate-300 text-[#0B2E26] cursor-pointer appearance-none checked:bg-[#0B2E26] checked:border-[#0B2E26]">
+                                <svg class="absolute w-4 h-4 text-[#C8E664] opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-[#0B2E26] text-lg line-through">Cek Populasi Ulat Grayak</p>
+                                <p class="text-sm text-slate-500 mt-1 font-medium line-through">Blok C. Dilakukan rutin pagi hari.</p>
+                            </div>
+                            <span class="shrink-0 bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold">Selesai</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Kamera -->
+    <div id="captureModal" class="fixed inset-0 bg-[#0B2E26]/80 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+        <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl transform transition-all scale-95 opacity-0" id="modalContent" style="transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <h3 class="text-2xl font-bold mb-6 text-center text-[#0B2E26]">Ambil Foto Daun</h3>
+            <div class="grid grid-cols-2 gap-5">
+                <button id="galleryBtn"
+                    class="flex flex-col items-center justify-center p-8 border-2 border-slate-100 rounded-3xl bg-slate-50 hover:bg-[#C8E664]/10 hover:border-[#C8E664] transition-all group shadow-sm">
+                    <span class="text-5xl group-hover:-translate-y-2 transition-transform duration-300">📁</span>
+                    <span class="text-sm font-bold mt-4 text-[#0B2E26]">Dari Galeri</span>
+                </button>
+                <button id="cameraBtn"
+                    class="flex flex-col items-center justify-center p-8 border-2 border-slate-100 rounded-3xl bg-slate-50 hover:bg-[#C8E664]/10 hover:border-[#C8E664] transition-all group shadow-sm">
+                    <span class="text-5xl group-hover:-translate-y-2 transition-transform duration-300">📸</span>
+                    <span class="text-sm font-bold mt-4 text-[#0B2E26]">Buka Kamera</span>
+                </button>
+            </div>
+            <div id="cameraContainer" class="hidden mt-6 overflow-hidden rounded-2xl border-4 border-slate-100 relative shadow-inner">
+                <video id="video" class="w-full bg-black aspect-[3/4] object-cover" autoplay playsinline></video>
+                <div class="absolute bottom-6 left-0 right-0 flex justify-center">
+                    <button id="snapBtn" class="w-16 h-16 bg-white rounded-full border-4 border-[#C8E664] hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(200,230,100,0.5)] flex items-center justify-center">
+                        <div class="w-12 h-12 bg-slate-100 rounded-full border border-slate-200"></div>
+                    </button>
+                </div>
+            </div>
+            <button id="closeModalBtn" class="w-full mt-6 py-3 rounded-xl text-slate-500 font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors">Batal</button>
+        </div>
+    </div>
+
+    <input type="file" id="imageInput" class="hidden" accept="image/*">
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
