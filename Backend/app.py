@@ -14,7 +14,7 @@ WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
 
 # Inisialisasi Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 def get_weather_context(location):
     """Mengambil data cuaca real-time untuk memperkuat reasoning AI"""
