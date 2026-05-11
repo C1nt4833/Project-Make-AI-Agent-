@@ -1,5 +1,5 @@
 // Konfigurasi API
-const API_URL = 'http://127.0.0.1:5000/analyze';
+const API_URL = 'https://project-make-ai-agent.onrender.com/analyze';
 
 // Global Variables
 let stream = null;
