@@ -1,4 +1,4 @@
-// Konfigurasi API
+// Konfigurasi API 
 const API_URL = 'https://project-make-ai-agent.onrender.com/analyze';
 
 // Global Variables
@@ -10,10 +10,32 @@ const modalContent = document.getElementById('modalContent');
 const imageInput = document.getElementById('imageInput');
 const previewImage = document.getElementById('previewImage');
 
-// --- Tab Navigation Logic ---
+// --- Tab Navigation & Mobile Sidebar Logic ---
 const navItems = document.querySelectorAll('.nav-item[data-target]');
 const pageSections = document.querySelectorAll('.page-section');
 let chartsInitialized = false;
+
+// Sidebar toggle logic
+const openSidebarBtn = document.getElementById('openSidebarBtn');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebar() {
+    sidebar.classList.remove('-translate-x-full');
+    sidebarOverlay.classList.remove('hidden');
+    setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
+}
+
+function closeSidebar() {
+    sidebar.classList.add('-translate-x-full');
+    sidebarOverlay.classList.add('opacity-0');
+    setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+}
+
+if (openSidebarBtn) openSidebarBtn.addEventListener('click', openSidebar);
+if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -30,6 +52,11 @@ navItems.forEach(item => {
         // Show target section
         const targetId = item.getAttribute('data-target');
         document.getElementById(targetId).classList.add('active');
+
+        // Close sidebar on mobile
+        if (window.innerWidth < 768) {
+            closeSidebar();
+        }
 
         // Initialize charts if target is analitik and not yet initialized
         if (targetId === 'analitik' && !chartsInitialized) {
@@ -241,9 +268,26 @@ async function uploadAndAnalyze() {
     const diagnosisLabel = document.getElementById('diagnosisLabel');
     const actionList = document.getElementById('actionPlan');
 
-    // Pastikan ada file sebelum mengirim
     if (!imageInput.files[0]) {
-        alert("Pilih atau ambil foto daun bawang terlebih dahulu!");
+        // Dummy run if no file for demo purposes (to showcase UI)
+        loading.classList.remove('hidden');
+        diagnosisLabel.innerText = "Menganalisis...";
+        diagnosisLabel.classList.add('text-orange-500');
+        
+        setTimeout(() => {
+            diagnosisLabel.innerText = "Bercak Ungu (Alternaria)";
+            diagnosisLabel.classList.remove('text-orange-500');
+            diagnosisLabel.classList.add('text-red-600');
+            
+            setHealthScore(68);
+            
+            actionList.innerHTML = `
+                <li class="flex items-start gap-2"><svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Terdeteksi spora pada daun</li>
+                <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Semprot Difenokonazol sore ini</li>
+                <li class="flex items-start gap-2"><svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Kurangi volume penyiraman besok</li>
+            `;
+            loading.classList.add('hidden');
+        }, 1500);
         return;
     }
 
@@ -251,48 +295,44 @@ async function uploadAndAnalyze() {
     formData.append('image', imageInput.files[0]);
     formData.append('location', location);
 
-    // Tampilkan loading UI
     loading.classList.remove('hidden');
-    diagnosisLabel.innerText = "Menganalisis dengan AI...";
+    diagnosisLabel.innerText = "Mengirim ke Cloud...";
 
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             body: formData
-            // Tidak perlu header 'Content-Type', browser akan mengaturnya otomatis untuk FormData
         });
 
-        if (!response.ok) throw new Error('Gagal menghubungi server AI');
+        if (!response.ok) throw new Error('Network response was not ok');
 
         const data = await response.json();
 
-        // 1. Update Diagnosa Utama
+        // Update UI
         diagnosisLabel.innerText = data.primary_diagnosis;
-        diagnosisLabel.className = 'font-bold text-xl text-[#0B2E26]'; 
-
-        // 2. Update Skor Kesehatan (Animasi Lingkaran)
+        diagnosisLabel.className = 'font-bold text-base md:text-lg text-[#0B2E26] truncate'; // reset class
         setHealthScore(data.health_index);
 
-        // 3. Update Daftar Tindakan (Action Plan)
+        // Update Action Plan
         actionList.innerHTML = "";
         data.action_plan.forEach(item => {
             const li = document.createElement('li');
-            li.className = "flex items-start gap-2 text-slate-700 font-semibold mb-2";
-            li.innerHTML = `<span class="text-[#C8E664]">⚡</span> ${item}`;
+            li.className = "flex items-start gap-2 text-slate-700 font-semibold";
+            li.innerHTML = `<svg class="w-4 h-4 text-[#C8E664] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> <span>${item}</span>`;
             actionList.appendChild(li);
         });
 
-        // 4. (Opsional) Tampilkan informasi cuaca yang didapat dari AI
-        console.log("Konteks Cuaca:", data.weather_context);
-
     } catch (error) {
         console.error("Error:", error);
-        diagnosisLabel.innerText = "Error: Gagal Analisis";
-        alert("Terjadi masalah saat menghubungkan ke AgriMind Cloud. Pastikan koneksi internet stabil.");
+        alert("Gagal terhubung ke server API. Pastikan API berjalan di alamat: " + API_URL);
+        // Fallback to dummy data
+        loading.classList.add('hidden');
+        // document.getElementById('analyzeBtn').click(); // uncomment to force dummy run on fail
     } finally {
         loading.classList.add('hidden');
     }
 }
+
 // --- Event Listeners ---
 document.getElementById('analyzeBtn').addEventListener('click', uploadAndAnalyze);
 document.getElementById('galleryBtn').addEventListener('click', () => imageInput.click());
