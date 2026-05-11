@@ -241,26 +241,9 @@ async function uploadAndAnalyze() {
     const diagnosisLabel = document.getElementById('diagnosisLabel');
     const actionList = document.getElementById('actionPlan');
 
+    // Pastikan ada file sebelum mengirim
     if (!imageInput.files[0]) {
-        // Dummy run if no file for demo purposes (to showcase UI)
-        loading.classList.remove('hidden');
-        diagnosisLabel.innerText = "Menganalisis...";
-        diagnosisLabel.classList.add('text-orange-500');
-        
-        setTimeout(() => {
-            diagnosisLabel.innerText = "Bercak Ungu (Alternaria)";
-            diagnosisLabel.classList.remove('text-orange-500');
-            diagnosisLabel.classList.add('text-red-600');
-            
-            setHealthScore(68);
-            
-            actionList.innerHTML = `
-                <li class="flex items-start gap-2"><span class="text-red-500">❌</span> Terdeteksi spora pada daun</li>
-                <li class="flex items-start gap-2"><span class="text-green-500">✅</span> Semprot Difenokonazol sore ini</li>
-                <li class="flex items-start gap-2"><span class="text-green-500">✅</span> Kurangi volume penyiraman besok</li>
-            `;
-            loading.classList.add('hidden');
-        }, 1500);
+        alert("Pilih atau ambil foto daun bawang terlebih dahulu!");
         return;
     }
 
@@ -268,44 +251,48 @@ async function uploadAndAnalyze() {
     formData.append('image', imageInput.files[0]);
     formData.append('location', location);
 
+    // Tampilkan loading UI
     loading.classList.remove('hidden');
-    diagnosisLabel.innerText = "Mengirim ke Cloud...";
+    diagnosisLabel.innerText = "Menganalisis dengan AI...";
 
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             body: formData
+            // Tidak perlu header 'Content-Type', browser akan mengaturnya otomatis untuk FormData
         });
 
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Gagal menghubungi server AI');
 
         const data = await response.json();
 
-        // Update UI
+        // 1. Update Diagnosa Utama
         diagnosisLabel.innerText = data.primary_diagnosis;
-        diagnosisLabel.className = 'font-bold text-lg text-[#0B2E26]'; // reset class
+        diagnosisLabel.className = 'font-bold text-xl text-[#0B2E26]'; 
+
+        // 2. Update Skor Kesehatan (Animasi Lingkaran)
         setHealthScore(data.health_index);
 
-        // Update Action Plan
+        // 3. Update Daftar Tindakan (Action Plan)
         actionList.innerHTML = "";
         data.action_plan.forEach(item => {
             const li = document.createElement('li');
-            li.className = "flex items-start gap-2 text-slate-700 font-semibold";
+            li.className = "flex items-start gap-2 text-slate-700 font-semibold mb-2";
             li.innerHTML = `<span class="text-[#C8E664]">⚡</span> ${item}`;
             actionList.appendChild(li);
         });
 
+        // 4. (Opsional) Tampilkan informasi cuaca yang didapat dari AI
+        console.log("Konteks Cuaca:", data.weather_context);
+
     } catch (error) {
         console.error("Error:", error);
-        alert("Gagal terhubung ke server. Menggunakan simulasi lokal.");
-        // Fallback to dummy data
-        loading.classList.add('hidden');
-        document.getElementById('analyzeBtn').click(); // trigger dummy
+        diagnosisLabel.innerText = "Error: Gagal Analisis";
+        alert("Terjadi masalah saat menghubungkan ke AgriMind Cloud. Pastikan koneksi internet stabil.");
     } finally {
         loading.classList.add('hidden');
     }
 }
-
 // --- Event Listeners ---
 document.getElementById('analyzeBtn').addEventListener('click', uploadAndAnalyze);
 document.getElementById('galleryBtn').addEventListener('click', () => imageInput.click());
