@@ -69,6 +69,7 @@ def analyze_onion():
         Berikan respons HANYA dalam format JSON:
         {{
             "health_index": 0-100,
+            "confidence": 0.0-1.0,
             "primary_diagnosis": "string",
             "risk_assessment": "string",
             "environmental_inference": {{
@@ -98,7 +99,19 @@ def analyze_onion():
 
         # Pastikan return dalam format JSON asli Flask agar header Content-Type benar
         import json
-        return jsonify(json.loads(clean_json))
+        response_data = json.loads(clean_json)
+
+        # Tambahkan confidence jika tidak disediakan oleh model
+        if 'confidence' not in response_data:
+            response_data['confidence'] = 0.75
+
+        # Pastikan confidence berbentuk angka float
+        try:
+            response_data['confidence'] = float(response_data['confidence'])
+        except (ValueError, TypeError):
+            response_data['confidence'] = 0.75
+
+        return jsonify(response_data)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
